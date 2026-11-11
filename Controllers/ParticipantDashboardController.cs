@@ -23,6 +23,10 @@ namespace RaceDay.Mvc.Controllers
                 return Forbid();
             }
 
+            // Pass the logged-in participant's information to the view.
+            ViewBag.DisplayName = HttpContext.Session.GetString("DisplayName");
+            ViewBag.Email = HttpContext.Session.GetString("Email");
+
             return View();
         }
     }
