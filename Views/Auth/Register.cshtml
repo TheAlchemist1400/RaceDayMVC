@@ -1,0 +1,200 @@
+﻿@model RaceDay.Mvc.ViewModels.RegisterViewModel
+
+@{
+    ViewData["Title"] = "Create Account";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7 col-lg-6">
+
+            <h2 class="text-center mb-2">Create your RaceDay account</h2>
+
+            <p class="text-center text-muted mb-4">
+                Join RaceDay as a participant or event organiser.
+            </p>
+
+            <form asp-controller="Auth"
+                  asp-action="Register"
+                  method="post">
+
+                <div asp-validation-summary="ModelOnly"
+                     class="text-danger mb-3"></div>
+
+                <!-- Account type -->
+                <div class="mb-3">
+                    <label asp-for="Role" class="form-label">
+                        Account Type
+                    </label>
+
+                    <select asp-for="Role"
+                            class="form-select"
+                            id="roleSelect">
+
+                        <option value="Participant">Participant</option>
+                        <option value="Organizer">Organizer</option>
+
+                    </select>
+
+                    <span asp-validation-for="Role"
+                          class="text-danger"></span>
+                </div>
+
+                <!-- Participant fields -->
+                <div id="participantFields">
+
+                    <h5 class="mt-4">Participant Details</h5>
+
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label">
+                            First Name
+                        </label>
+
+                        <input asp-for="Name" class="form-control" />
+
+                        <span asp-validation-for="Name"
+                              class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Lastname" class="form-label">
+                            Last Name
+                        </label>
+
+                        <input asp-for="Lastname" class="form-control" />
+
+                        <span asp-validation-for="Lastname"
+                              class="text-danger"></span>
+                    </div>
+
+                </div>
+
+                <!-- Organiser fields -->
+                <div id="organizerFields" style="display:none;">
+
+                    <h5 class="mt-4">Organisation Details</h5>
+
+                    <div class="mb-3">
+                        <label asp-for="OrganizationName"
+                               class="form-label">
+                            Organisation Name
+                        </label>
+
+                        <input asp-for="OrganizationName"
+                               class="form-control" />
+
+                        <span asp-validation-for="OrganizationName"
+                              class="text-danger"></span>
+                    </div>
+
+                </div>
+
+                <!-- Shared fields -->
+                <h5 class="mt-4">Account Information</h5>
+
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label">
+                        Email Address
+                    </label>
+
+                    <input asp-for="Email"
+                           class="form-control"
+                           type="email" />
+
+                    <span asp-validation-for="Email"
+                          class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="PhoneNumber" class="form-label">
+                        Phone Number
+                    </label>
+
+                    <input asp-for="PhoneNumber"
+                           class="form-control"
+                           type="tel" />
+
+                    <span asp-validation-for="PhoneNumber"
+                          class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Password" class="form-label">
+                        Password
+                    </label>
+
+                    <input asp-for="Password"
+                           class="form-control"
+                           type="password" />
+
+                    <span asp-validation-for="Password"
+                          class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="ConfirmPassword"
+                           class="form-label">
+                        Confirm Password
+                    </label>
+
+                    <input asp-for="ConfirmPassword"
+                           class="form-control"
+                           type="password" />
+
+                    <span asp-validation-for="ConfirmPassword"
+                          class="text-danger"></span>
+                </div>
+
+                <button type="submit"
+                        class="btn btn-primary w-100 mt-3">
+                    Create Account
+                </button>
+
+                <p class="text-center mt-3">
+                    Already have an account?
+                    <a asp-controller="Auth"
+                       asp-action="Login">
+                        Log in
+                    </a>
+                </p>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        const roleSelect = document.getElementById("roleSelect");
+
+        const participantFields =
+            document.getElementById("participantFields");
+
+        const organizerFields =
+            document.getElementById("organizerFields");
+
+        function updateRegistrationFields() {
+
+            const selectedRole = roleSelect.value;
+
+            if (selectedRole === "Participant") {
+
+                participantFields.style.display = "block";
+                organizerFields.style.display = "none";
+
+            } else {
+
+                participantFields.style.display = "none";
+                organizerFields.style.display = "block";
+
+            }
+        }
+
+        roleSelect.addEventListener("change", updateRegistrationFields);
+
+        // Set the correct fields when the page first loads
+        updateRegistrationFields();
+    </script>
+}
