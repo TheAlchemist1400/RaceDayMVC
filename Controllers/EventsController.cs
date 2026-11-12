@@ -251,5 +251,60 @@ namespace RaceDay.Mvc.Controllers
             return View(model);
         }
 
+
+        // GET: /Events/Edit/5
+        // Loads an existing event into the editing form.
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            // STEP 1: Check login.
+            int? userId = HttpContext.Session.GetInt32("UserId");
+
+            if (userId == null)
+                return RedirectToAction("Login", "Auth");
+
+            // STEP 2: Check Organizer role.
+            string? role = HttpContext.Session.GetString("Role");
+
+            if (role != "Organizer")
+                return StatusCode(403);
+
+            // STEP 3: Retrieve only this Organizer's events.
+            using var response = await _apiClient.SendAsync(
+                HttpMethod.Get,
+                "api/events/mine"
+            );
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return StatusCode((int)response.StatusCode);
+            }
+
+            var events = await _apiClient.ReadAsync<List<EventViewModel>>(response);
+
+            // STEP 4: Find the requested event in the Organizer's own events.
+            var eventItem = events?.FirstOrDefault(e => e.EventId == id);
+
+            if (eventItem == null)
+                return NotFound("Event not found.");
+
+            // STEP 5: Load available locations.
+            var locations = await GetLocationsAsync();
+
+            // STEP 6: Populate the editing form.
+            var model = new EditEventViewModel
+            {
+                EventId = eventItem.EventId,
+                EventsName = eventItem.EventsName,
+                EventDate = eventItem.EventDate,
+                MaxParticipants = eventItem.MaxParticipants,
+                LocationId = eventItem.LocationId,
+                Locations = locations
+            };
+
+            return View(model);
+        }
+
+
     }
 }
