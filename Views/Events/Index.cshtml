@@ -1,0 +1,89 @@
+﻿@model List<RaceDay.Mvc.ViewModels.EventViewModel>
+
+@{
+    ViewData["Title"] = "Browse Events";
+}
+
+<div class="container mt-4">
+
+    <div class="mb-4">
+        <h1>Discover Events</h1>
+        <p class="text-muted">
+            Explore upcoming events and find your next challenge.
+        </p>
+    </div>
+
+    <hr />
+
+    @if (!string.IsNullOrEmpty(ViewBag.ErrorMessage))
+    {
+        <div class="alert alert-danger">
+            @ViewBag.ErrorMessage
+        </div>
+    }
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="alert alert-info">
+            No events are currently available.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+
+            @foreach (var eventItem in Model)
+            {
+                <div class="col-md-6 col-lg-4 mb-4">
+
+                    <div class="card shadow-sm h-100">
+
+                        <div class="card-body">
+
+                            <h5 class="card-title">
+                                @eventItem.EventsName
+                            </h5>
+
+                            <hr />
+
+                            <p>
+                                <strong>Date:</strong>
+                                @eventItem.EventDate.ToString("dd MMMM yyyy")
+                            </p>
+
+                            <p>
+                                <strong>Venue:</strong>
+                                @eventItem.Location
+                            </p>
+
+                            <p>
+                                <strong>City:</strong>
+                                @eventItem.City,
+                                @eventItem.Province
+                            </p>
+
+                            <p>
+                                <strong>Organizer:</strong>
+                                @eventItem.Organizer
+                            </p>
+
+                            <p>
+                                <strong>Maximum Participants:</strong>
+                                @eventItem.MaxParticipants
+                            </p>
+
+                            <button class="btn btn-primary w-100" disabled>
+                                View Details - Coming Soon
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            }
+
+        </div>
+    }
+
+</div>
