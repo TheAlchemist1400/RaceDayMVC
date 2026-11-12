@@ -21,7 +21,7 @@ namespace RaceDay.Mvc.Controllers
             // Only Organizers may access this dashboard.
             if (role != "Organizer")
             {
-                return Forbid();
+                return StatusCode(403);
             }
 
             // Step 3: Retrieve the Organizer's information.

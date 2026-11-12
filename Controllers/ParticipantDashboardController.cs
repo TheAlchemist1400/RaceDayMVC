@@ -20,7 +20,7 @@ namespace RaceDay.Mvc.Controllers
 
             if (role != "Participant")
             {
-                return Forbid();
+                return StatusCode(403);
             }
 
             // Pass the logged-in participant's information to the view.
