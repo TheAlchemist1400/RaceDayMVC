@@ -98,5 +98,66 @@ namespace RaceDay.Mvc.Controllers
             return View(events ?? new List<EventViewModel>());
         }
 
+
+        // Retrieves available event locations from the API.
+        private async Task<List<EventLocationViewModel>> GetLocationsAsync()
+        {
+            using var response = await _apiClient.SendAsync(
+                HttpMethod.Get,
+                "api/locations"
+            );
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return new List<EventLocationViewModel>();
+            }
+
+            var locations = await _apiClient.ReadAsync<List<EventLocationViewModel>>(
+                response
+            );
+
+            return locations ?? new List<EventLocationViewModel>();
+        }
+
+
+        // GET: /Events/Create
+        // Displays the form for creating a new event.
+        [HttpGet]
+        public async Task<IActionResult> Create()
+        {
+            // Only logged-in Organizers can create events.
+            int? userId = HttpContext.Session.GetInt32("UserId");
+
+            if (userId == null)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            string? role = HttpContext.Session.GetString("Role");
+
+            if (role != "Organizer")
+            {
+                return StatusCode(403);
+            }
+
+            // Retrieve locations from the API.
+            var locations = await GetLocationsAsync();
+
+            // If the API returned no locations, inform the Organizer.
+            if (!locations.Any())
+            {
+                ViewBag.ErrorMessage =
+                    "No event locations are available. Please add a location first.";
+            }
+
+            // Create an empty form model and attach the locations.
+            var model = new CreateEventViewModel
+            {
+                EventDate = DateOnly.FromDateTime(DateTime.Today.AddDays(1)),
+                Locations = locations
+            };
+
+            return View(model);
+        }
     }
 }
