@@ -159,5 +159,97 @@ namespace RaceDay.Mvc.Controllers
 
             return View(model);
         }
+
+
+        // POST: /Events/Create
+        // Receives the form data and sends it to the API.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(CreateEventViewModel model)
+        {
+            // STEP 1: Check that the user is logged in.
+            int? userId = HttpContext.Session.GetInt32("UserId");
+
+            if (userId == null)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            // STEP 2: Check that the user is an Organizer.
+            string? role = HttpContext.Session.GetString("Role");
+
+            if (role != "Organizer")
+            {
+                return StatusCode(403);
+            }
+
+            // STEP 3: Make sure the event date is not in the past.
+            if (model.EventDate < DateOnly.FromDateTime(DateTime.Today))
+            {
+                ModelState.AddModelError(
+                    nameof(model.EventDate),
+                    "The event date cannot be in the past."
+                );
+            }
+
+            // STEP 4: If validation fails, reload locations and show the form.
+            if (!ModelState.IsValid)
+            {
+                model.Locations = await GetLocationsAsync();
+                return View(model);
+            }
+
+            // STEP 5: Prepare the information expected by the API.
+            var request = new
+            {
+                model.EventsName,
+                model.EventDate,
+                model.MaxParticipants,
+                model.LocationId
+            };
+
+            // STEP 6: Send the POST request to the API.
+            using var response = await _apiClient.SendAsync(
+                HttpMethod.Post,
+                "api/events",
+                request
+            );
+
+            // STEP 7: Handle API errors.
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    "Your API session has expired. Please log in again."
+                );
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+            {
+                return StatusCode(403);
+            }
+            else if (!response.IsSuccessStatusCode)
+            {
+                string error = await response.Content.ReadAsStringAsync();
+
+                ModelState.AddModelError(
+                    string.Empty,
+                    $"Unable to create event. {error}"
+                );
+            }
+            else
+            {
+                // STEP 8: Event successfully created!
+                TempData["Success"] = "Your event was published successfully.";
+
+                return RedirectToAction(nameof(MyEvents));
+            }
+
+            // If the API returned an error, reload locations before displaying
+            // the form again so the dropdown does not become empty.
+            model.Locations = await GetLocationsAsync();
+
+            return View(model);
+        }
+
     }
 }
