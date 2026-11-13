@@ -599,5 +599,41 @@ namespace RaceDay.Mvc.Controllers
             // STEP 6: Display the event details.
             return View(model);
         }
+
+
+        // GET: /Events/Banner/5
+        [HttpGet]
+        [ResponseCache(
+            NoStore = true,
+            Location = ResponseCacheLocation.None)]
+        public async Task<IActionResult> Banner(int id)
+        {
+            // STEP 1: Validate the Event ID.
+            if (id <= 0)
+                return BadRequest("Invalid event ID.");
+
+            // STEP 2: Request the banner from RaceDay API.
+            using var response = await _apiClient.SendAsync(
+                HttpMethod.Get,
+                $"api/events/{id}/banner"
+            );
+
+            // STEP 3: Handle API errors.
+            if (!response.IsSuccessStatusCode)
+                return StatusCode((int)response.StatusCode);
+
+            // STEP 4: Read the image bytes.
+            byte[] imageBytes =
+                await response.Content.ReadAsByteArrayAsync();
+
+            // STEP 5: Retrieve the image content type.
+            string contentType =
+                response.Content.Headers.ContentType?.MediaType
+                ?? "application/octet-stream";
+
+            // STEP 6: Return the image to the browser.
+            return File(imageBytes, contentType);
+        }
+
     }
 }

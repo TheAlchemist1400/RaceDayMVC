@@ -13,6 +13,8 @@ namespace RaceDay.Mvc.ViewModels
 
         public int MaxParticipants { get; set; }
 
+        public string? BannerImageUrl { get; set; }
+
         public int LocationId { get; set; }
 
         public string Location { get; set; } = string.Empty;

@@ -61,6 +61,27 @@
 
                     <div class="card shadow-sm h-100">
 
+                        @if (!string.IsNullOrWhiteSpace(eventItem.BannerImageUrl))
+                        {
+                            <img src="@Url.Action("Banner", "Events",
+                                          new { id = eventItem.EventId })"
+                                 class="card-img-top"
+                                 alt="Banner for @eventItem.EventsName"
+                                 style="height: 200px; object-fit: cover;" />
+                        }
+                        else
+                        {
+                            <div class="bg-light border-bottom
+                                d-flex align-items-center justify-content-center"
+                                 style="height: 200px;">
+
+                                <span class="text-muted">
+                                    No Event Banner
+                                </span>
+
+                            </div>
+                        }
+
                         <div class="card-body">
 
                             <h5 class="card-title">
