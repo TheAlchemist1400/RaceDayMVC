@@ -600,6 +600,102 @@ namespace RaceDay.Mvc.Controllers
             return View(model);
         }
 
+        // POST: /Events/UploadBanner/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequestSizeLimit(5 * 1024 * 1024 + 65536)]
+        public async Task<IActionResult> UploadBanner(
+            int id,
+            IFormFile file)
+        {
+            // STEP 1: Verify the MVC session.
+            int? userId = HttpContext.Session.GetInt32("UserId");
+
+            if (userId == null)
+                return RedirectToAction("Login", "Auth");
+
+            // STEP 2: Only Organizers can upload banners.
+            if (HttpContext.Session.GetString("Role") != "Organizer")
+                return StatusCode(403);
+
+            // STEP 3: Validate the Event ID.
+            if (id <= 0)
+                return BadRequest("Invalid event ID.");
+
+            // STEP 4: Validate the selected image.
+            if (file == null || file.Length == 0)
+            {
+                TempData["Error"] = "Please select a banner image.";
+                return RedirectToAction(nameof(MyEvents));
+            }
+
+            const long maxFileSize = 5 * 1024 * 1024;
+
+            if (file.Length > maxFileSize)
+            {
+                TempData["Error"] = "Banner must not exceed 5 MB.";
+                return RedirectToAction(nameof(MyEvents));
+            }
+
+            try
+            {
+                // STEP 5: Forward the image to the API.
+                using var response = await _apiClient.UploadImageAsync(
+                    $"api/events/{id}/upload-banner",
+                    file
+                );
+
+                // STEP 6: Handle authentication errors.
+                if (response.StatusCode ==
+                    System.Net.HttpStatusCode.Unauthorized)
+                {
+                    return RedirectToAction("Login", "Auth");
+                }
+
+                if (response.StatusCode ==
+                    System.Net.HttpStatusCode.Forbidden)
+                {
+                    return StatusCode(403);
+                }
+
+                if (response.StatusCode ==
+                    System.Net.HttpStatusCode.NotFound)
+                {
+                    return NotFound("Event not found.");
+                }
+
+                // STEP 7: Handle unsuccessful uploads.
+                if (!response.IsSuccessStatusCode)
+                {
+                    string error =
+                        await response.Content.ReadAsStringAsync();
+
+                    TempData["Error"] =
+                        $"Unable to upload event banner. {error}";
+
+                    return RedirectToAction(nameof(MyEvents));
+                }
+
+                // STEP 8: Confirm successful upload.
+                TempData["Success"] =
+                    "Event banner uploaded successfully!";
+
+                return RedirectToAction(nameof(MyEvents));
+            }
+            catch (ArgumentException ex)
+            {
+                TempData["Error"] = ex.Message;
+                return RedirectToAction(nameof(MyEvents));
+            }
+            catch (HttpRequestException)
+            {
+                TempData["Error"] =
+                    "Could not connect to the RaceDay API.";
+
+                return RedirectToAction(nameof(MyEvents));
+            }
+        }
+
 
         // GET: /Events/Banner/5
         [HttpGet]
