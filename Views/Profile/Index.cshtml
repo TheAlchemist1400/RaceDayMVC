@@ -45,6 +45,34 @@
                                 Upload a JPG, PNG or WebP image (maximum 5 MB).
                             </p>
 
+                            <div class="text-center mb-4">
+
+                                @if (!string.IsNullOrWhiteSpace(Model.ProfileImageUrl))
+                                {
+                                    <img src="@Url.Action("Image", "Profile")"
+                                         alt="My profile picture"
+                                         class="rounded-circle border shadow-sm"
+                                         style="width: 150px;
+                                    height: 150px;
+                                    object-fit: cover;" />
+                                }
+                                else
+                                {
+                                    <div class="rounded-circle bg-light border
+                                        d-flex align-items-center justify-content-center
+                                        mx-auto"
+                                         style="width: 150px; height: 150px;">
+
+                                        <span class="text-secondary">
+                                            No Profile Picture
+                                        </span>
+
+                                    </div>
+                                }
+
+                            </div>
+
+
                             <form asp-controller="Profile"
                                   asp-action="UploadImage"
                                   method="post"

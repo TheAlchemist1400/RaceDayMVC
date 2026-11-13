@@ -20,6 +20,8 @@ namespace RaceDay.Mvc.ViewModels
         [StringLength(100)]
         public string Email { get; set; } = string.Empty;
 
+        public string? ProfileImageUrl { get; set; }
+
         [Required(ErrorMessage = "Phone number is required.")]
         [StringLength(15)]
         public string PhoneNumber { get; set; } = string.Empty;

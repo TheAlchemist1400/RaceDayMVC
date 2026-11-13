@@ -209,5 +209,43 @@ namespace RaceDay.Mvc.Controllers
             }
         }
 
+        // GET: /Profile/Image
+        [HttpGet]
+        [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+        public async Task<IActionResult> Image()
+        {
+            // STEP 1: Verify the MVC session.
+            int? userId = HttpContext.Session.GetInt32("UserId");
+
+            if (userId == null)
+                return Unauthorized();
+
+            // STEP 2: Only Participants can access this endpoint.
+            if (HttpContext.Session.GetString("Role") != "Participant")
+                return StatusCode(403);
+
+            // STEP 3: Request the image from the API.
+            using var response = await _apiClient.SendAsync(
+                HttpMethod.Get,
+                "api/profile/image"
+            );
+
+            // STEP 4: Preserve API error responses.
+            if (!response.IsSuccessStatusCode)
+                return StatusCode((int)response.StatusCode);
+
+            // STEP 5: Read the image bytes.
+            byte[] imageBytes =
+                await response.Content.ReadAsByteArrayAsync();
+
+            // STEP 6: Get the image's content type.
+            string contentType =
+                response.Content.Headers.ContentType?.MediaType
+                ?? "application/octet-stream";
+
+            // STEP 7: Return the image to the browser.
+            return File(imageBytes, contentType);
+        }
+
     }
 }
