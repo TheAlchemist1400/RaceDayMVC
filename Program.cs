@@ -1,6 +1,15 @@
 using RaceDay.Mvc.Services;
+using System.Globalization;
+using Microsoft.AspNetCore.Localization;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Decimal Range attributes and HTML number inputs use '.' (e.g. 0.01).
+// Pin number parsing to invariant culture so Windows regional settings
+// that use ',' cannot throw FormatException or reject form posts.
+var invariantCulture = CultureInfo.InvariantCulture;
+CultureInfo.DefaultThreadCurrentCulture = invariantCulture;
+CultureInfo.DefaultThreadCurrentUICulture = invariantCulture;
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -34,7 +43,21 @@ builder.Services.AddHttpClient("RaceDayApi", client =>
 // TODO Going to add Services
 builder.Services.AddScoped<RaceDayApiClient>();
 
+
 var app = builder.Build();
+
+
+var localizationOptions = new RequestLocalizationOptions
+{
+    DefaultRequestCulture = new RequestCulture(invariantCulture),
+    SupportedCultures = new[] { invariantCulture },
+    SupportedUICultures = new[] { invariantCulture }
+};
+// Ignore Accept-Language / cookies so the OS or browser cannot switch
+// back to a comma decimal separator.
+localizationOptions.RequestCultureProviders.Clear();
+app.UseRequestLocalization(localizationOptions);
+
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

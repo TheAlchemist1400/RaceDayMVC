@@ -1,0 +1,174 @@
+﻿@model RaceDay.Mvc.ViewModels.EventDetailsViewModel
+
+@{
+    ViewData["Title"] = "Event Details";
+
+    string? role = Context.Session.GetString("Role");
+}
+
+
+<div class="container mt-4">
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["Success"]
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    <a asp-controller="Events"
+       asp-action="Index"
+       class="btn btn-outline-secondary mb-4">
+        Back to Events
+    </a>
+
+    <h1>@Model.Event.EventsName</h1>
+
+    <p class="text-muted">
+        Organized by @Model.Event.Organizer
+    </p>
+
+    <hr />
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+
+            <h4>Event Information</h4>
+
+            <p>
+                <strong>Date:</strong>
+                @Model.Event.EventDate.ToString("dd MMMM yyyy")
+            </p>
+
+            <p>
+                <strong>Venue:</strong>
+                @Model.Event.Location
+            </p>
+
+            <p>
+                <strong>City:</strong>
+                @Model.Event.City, @Model.Event.Province
+            </p>
+
+            <p>
+                <strong>Maximum Participants:</strong>
+                @Model.Event.MaxParticipants
+            </p>
+
+        </div>
+    </div>
+
+    <h3>Available Activities</h3>
+
+    @if (!Model.Activities.Any())
+    {
+        <div class="alert alert-info">
+            No activities have been added to this event yet.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+
+            @foreach (var activity in Model.Activities)
+            {
+                <div class="col-md-6 mb-4">
+
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body">
+
+                            <h5>@activity.ActivityName</h5>
+
+                            <hr />
+
+                            <p>
+                                <strong>Distance:</strong>
+                                @activity.DistanceKm km
+                            </p>
+
+                            <p>
+                                <strong>Entry Fee:</strong>
+                                R @activity.EntryFee.ToString("N2")
+                            </p>
+
+                            <p>
+                                <strong>Start Time:</strong>
+                                @activity.StartTime.ToString("HH:mm")
+                            </p>
+
+                            <p>
+                                <strong>Maximum Entrants:</strong>
+                                @activity.MaximumEntrants
+                            </p>
+                           
+                            @if (role == "Participant")
+                            {
+                                @if (Model.IsEnrolled)
+                                {
+                                    <button class="btn btn-outline-success w-100"
+                                            disabled>
+                                        Already Enrolled
+                                    </button>
+
+                                    <p class="text-muted small mt-2 mb-0">
+                                        Registration Status:
+                                        <strong>@Model.EnrolmentStatus</strong>
+                                    </p>
+
+                                    <a asp-controller="Enrolments"
+                                       asp-action="MyEnrolments"
+                                       class="btn btn-outline-primary w-100 mt-2">
+                                        View My Enrolments
+                                    </a>
+                                }
+                                else
+                                {
+                                    <form asp-controller="Enrolments"
+                                          asp-action="Create"
+                                          method="post">
+
+                                        @Html.AntiForgeryToken()
+
+                                        <input type="hidden"
+                                               name="EventId"
+                                               value="@Model.Event.EventId" />
+
+                                        <input type="hidden"
+                                               name="ActivityId"
+                                               value="@activity.ActivityId" />
+
+                                        <button type="submit"
+                                                class="btn btn-primary w-100">
+                                            Enrol Now
+                                        </button>
+
+                                    </form>
+                                }
+                            }
+
+                            @if (role == "Organizer")
+                            {
+                                <a asp-controller="Activities"
+                                   asp-action="Edit"
+                                   asp-route-id="@activity.ActivityId"
+                                   class="btn btn-outline-primary w-100 mt-2">
+                                    Edit Activity
+                                </a>
+                            }
+                        </div>
+                    </div>
+
+                </div>
+            }
+
+        </div>
+    }
+
+</div>

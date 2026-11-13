@@ -244,8 +244,7 @@ namespace RaceDay.Mvc.Controllers
                 return RedirectToAction(nameof(MyEvents));
             }
 
-            // If the API returned an error, reload locations before displaying
-            // the form again so the dropdown does not become empty.
+            // If the API returned an error, reload locations before displaying the form again so the dropdown does not become empty.
             model.Locations = await GetLocationsAsync();
 
             return View(model);
@@ -306,5 +305,299 @@ namespace RaceDay.Mvc.Controllers
         }
 
 
+        // POST: /Events/Edit/{id}
+        // Updates an existing event through the API.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, EditEventViewModel model)
+        {
+            // STEP 1: Check whether the user is logged in.
+            int? userId = HttpContext.Session.GetInt32("UserId");
+
+            if (userId == null)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            // STEP 2: Confirm that the user is an Organizer.
+            string? role = HttpContext.Session.GetString("Role");
+
+            if (role != "Organizer")
+            {
+                return StatusCode(403);
+            }
+
+            // STEP 3: Make sure the URL ID matches the submitted EventId.
+            if (id != model.EventId)
+            {
+                return BadRequest("Event ID mismatch.");
+            }
+
+            // STEP 4: Validate the event date.
+            if (model.EventDate < DateOnly.FromDateTime(DateTime.Today))
+            {
+                ModelState.AddModelError(
+                    nameof(model.EventDate),
+                    "The event date cannot be in the past."
+                );
+            }
+
+            // STEP 5: If validation fails, reload locations and return the form.
+            if (!ModelState.IsValid)
+            {
+                model.Locations = await GetLocationsAsync();
+                return View(model);
+            }
+
+            // STEP 6: Prepare the request expected by the API.
+            var request = new
+            {
+                model.EventsName,
+                model.EventDate,
+                model.MaxParticipants,
+                model.LocationId
+            };
+
+            // STEP 7: Send PUT request to the API.
+            using var response = await _apiClient.SendAsync(
+                HttpMethod.Put,
+                $"api/events/{id}",
+                request
+            );
+
+            // STEP 8: Handle API responses.
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                ModelState.AddModelError(
+                    string.Empty,
+                    "Your API session has expired. Please log in again."
+                );
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+            {
+                return StatusCode(403);
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return NotFound("Event not found.");
+            }
+            else if (!response.IsSuccessStatusCode)
+            {
+                string error = await response.Content.ReadAsStringAsync();
+
+                ModelState.AddModelError(
+                    string.Empty,
+                    $"Unable to update event. {error}"
+                );
+            }
+            else
+            {
+                // STEP 9: Update successful.
+                TempData["Success"] = "Your event was updated successfully.";
+
+                return RedirectToAction(nameof(MyEvents));
+            }
+
+            // Reload locations if we need to display the form again.
+            model.Locations = await GetLocationsAsync();
+
+            return View(model);
+        }
+
+
+        // GET: /Events/Delete/5
+        // Displays a confirmation page before deleting an event.
+        [HttpGet]
+        public async Task<IActionResult> Delete(int id)
+        {
+            // STEP 1: Check login.
+            int? userId = HttpContext.Session.GetInt32("UserId");
+
+            if (userId == null)
+                return RedirectToAction("Login", "Auth");
+
+            // STEP 2: Only Organizers can delete events.
+            string? role = HttpContext.Session.GetString("Role");
+
+            if (role != "Organizer")
+                return StatusCode(403);
+
+            // STEP 3: Retrieve this Organizer's events.
+            using var response = await _apiClient.SendAsync(
+                HttpMethod.Get,
+                "api/events/mine"
+            );
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return StatusCode((int)response.StatusCode);
+            }
+
+            var events = await _apiClient.ReadAsync<List<EventViewModel>>(response);
+
+            // STEP 4: Find the event within this Organizer's events.
+            var eventItem = events?.FirstOrDefault(e => e.EventId == id);
+
+            if (eventItem == null)
+                return NotFound("Event not found.");
+
+            // STEP 5: Display the event details for confirmation.
+            return View(eventItem);
+        }
+
+
+        // POST: /Events/Delete/5
+        // Sends the DELETE request to the API.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [ActionName("Delete")]
+        public async Task<IActionResult> DeleteCornfirmation(int id)
+        {
+            // STEP 1: Check login.
+            int? userId = HttpContext.Session.GetInt32("UserId");
+
+            if (userId == null)
+                return RedirectToAction("Login", "Auth");
+
+            // STEP 2: Only Organizers can delete events.
+            string? role = HttpContext.Session.GetString("Role");
+
+            if (role != "Organizer")
+                return StatusCode(403);
+
+            // STEP 3: Send DELETE request to the API.
+            using var response = await _apiClient.SendAsync(
+                HttpMethod.Delete,
+                $"api/events/{id}"
+            );
+
+            // STEP 4: Handle API responses.
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                TempData["Error"] =
+                    "Your API session has expired. Please log in again.";
+
+                return RedirectToAction("Login", "Auth");
+            }
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+            {
+                return StatusCode(403);
+            }
+
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return NotFound("Event not found.");
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                TempData["Error"] = "Unable to delete this event.";
+                return RedirectToAction(nameof(MyEvents));
+            }
+
+            // STEP 5: Confirm successful deletion.
+            TempData["Success"] = "Your event was deleted successfully.";
+
+            return RedirectToAction(nameof(MyEvents));
+        }
+
+        // GET: /Events/Details/5
+        // Displays an event and its available activities.
+        [HttpGet]
+        public async Task<IActionResult> Details(int id)
+        {
+            // STEP 1: Require a logged-in user.
+            int? userId = HttpContext.Session.GetInt32("UserId");
+
+            if (userId == null)
+            {
+                return RedirectToAction("Login", "Auth");
+            }
+
+            // STEP 2: Retrieve the selected event.
+            using var eventResponse = await _apiClient.SendAsync(
+                HttpMethod.Get,
+                $"api/events/{id}"
+            );
+
+            if (eventResponse.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return NotFound("Event not found.");
+            }
+
+            if (!eventResponse.IsSuccessStatusCode)
+            {
+                return StatusCode((int)eventResponse.StatusCode);
+            }
+
+            var eventItem = await _apiClient.ReadAsync<EventViewModel>(
+                eventResponse
+            );
+
+            if (eventItem == null)
+            {
+                return NotFound("Event not found.");
+            }
+
+            // STEP 3: Retrieve activities belonging to this event.
+            using var activityResponse = await _apiClient.SendAsync(
+                HttpMethod.Get,
+                $"api/events/{id}/categories"
+            );
+
+            if (!activityResponse.IsSuccessStatusCode)
+            {
+                return StatusCode((int)activityResponse.StatusCode);
+            }
+
+            var activities =
+                await _apiClient.ReadAsync<List<ActivityViewModel>>(
+                    activityResponse
+                );
+
+            // STEP 4: Combine event and activity information.
+            var model = new EventDetailsViewModel
+            {
+                Event = eventItem,
+                Activities = activities ?? new List<ActivityViewModel>()
+            };
+
+            // STEP 5: Check whether the Participant is already enrolled.
+            string? role = HttpContext.Session.GetString("Role");
+
+            if (role == "Participant")
+            {
+                using var enrolmentResponse = await _apiClient.SendAsync(
+                    HttpMethod.Get,
+                    "api/enrolments/mine"
+                );
+
+                // Do not silently treat an API failure as "not enrolled".
+                if (!enrolmentResponse.IsSuccessStatusCode)
+                {
+                    return StatusCode((int)enrolmentResponse.StatusCode);
+                }
+
+                var enrolments =
+                    await _apiClient.ReadAsync<List<MyEnrolmentViewModel>>(
+                        enrolmentResponse
+                    );
+
+                // Find any registration belonging to this event.
+                var existingEnrolment = enrolments?
+                    .FirstOrDefault(e => e.EventId == id);
+
+                if (existingEnrolment != null)
+                {
+                    model.IsEnrolled = true;
+                    model.EnrolmentStatus =
+                        existingEnrolment.RegistrationStatus;
+                }
+            }
+
+            // STEP 6: Display the event details.
+            return View(model);
+        }
     }
 }

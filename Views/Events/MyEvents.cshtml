@@ -98,6 +98,13 @@
                                     Edit
                                 </a>
 
+                                <a asp-controller="Activities"
+                                   asp-action="Create"
+                                   asp-route-eventId="@eventItem.EventId"
+                                   class="btn btn-outline-success btn-sm">
+                                    Add Activity
+                                </a>
+
                                 <a asp-controller="Events"
                                    asp-action="Delete"
                                    asp-route-id="@eventItem.EventId"

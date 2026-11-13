@@ -1,0 +1,138 @@
+﻿@model RaceDay.Mvc.ViewModels.EditActivityViewModel
+
+@{
+    ViewData["Title"] = "Edit Activity";
+}
+
+<div class="container mt-4">
+
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+
+            <h1>Edit Activity</h1>
+
+            <p class="text-muted">
+                Update the details of your race activity.
+            </p>
+
+            <hr />
+
+            <form asp-controller="Activities"
+                  asp-action="Edit"
+                  asp-route-id="@Model.ActivityId"
+                  method="post">
+
+                @Html.AntiForgeryToken()
+
+                <input asp-for="ActivityId" type="hidden" />
+                <input asp-for="EventId" type="hidden" />
+
+                <div asp-validation-summary="ModelOnly"
+                     class="text-danger mb-3">
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="ActivityName"
+                           class="form-label">
+                        Activity Name
+                    </label>
+
+                    <input asp-for="ActivityName"
+                           class="form-control" />
+
+                    <span asp-validation-for="ActivityName"
+                          class="text-danger">
+                    </span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="DistanceKm"
+                           class="form-label">
+                        Distance (km)
+                    </label>
+
+                    <input asp-for="DistanceKm"
+                           type="number"
+                           step="0.01"
+                           min="0.01"
+                           class="form-control" />
+
+                    <span asp-validation-for="DistanceKm"
+                          class="text-danger">
+                    </span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="EntryFee"
+                           class="form-label">
+                        Entry Fee (R)
+                    </label>
+
+                    <input asp-for="EntryFee"
+                           type="number"
+                           step="0.01"
+                           min="0"
+                           class="form-control" />
+
+                    <span asp-validation-for="EntryFee"
+                          class="text-danger">
+                    </span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="StartTime"
+                           class="form-label">
+                        Start Time
+                    </label>
+
+                    <input asp-for="StartTime"
+                           type="time"
+                           class="form-control" />
+
+                    <span asp-validation-for="StartTime"
+                          class="text-danger">
+                    </span>
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="MaximumEntrants"
+                           class="form-label">
+                        Maximum Entrants
+                    </label>
+
+                    <input asp-for="MaximumEntrants"
+                           type="number"
+                           min="1"
+                           class="form-control" />
+
+                    <span asp-validation-for="MaximumEntrants"
+                          class="text-danger">
+                    </span>
+                </div>
+
+                <div class="d-flex gap-2">
+
+                    <button type="submit"
+                            class="btn btn-primary">
+                        Save Changes
+                    </button>
+
+                    <a asp-controller="Events"
+                       asp-action="Details"
+                       asp-route-id="@Model.EventId"
+                       class="btn btn-outline-secondary">
+                        Cancel
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

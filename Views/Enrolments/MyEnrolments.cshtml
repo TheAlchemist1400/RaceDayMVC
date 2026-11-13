@@ -1,0 +1,112 @@
+﻿@model List<RaceDay.Mvc.ViewModels.MyEnrolmentViewModel>
+
+@{
+    ViewData["Title"] = "My Enrolments";
+}
+
+<div class="container mt-4">
+
+    <h1>My Enrolments</h1>
+
+    <p class="text-muted">
+        View your registered events, activities and bib numbers.
+    </p>
+
+    <hr />
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            You haven't enrolled in any events yet.
+        </div>
+
+        <a asp-controller="Events"
+           asp-action="Index"
+           class="btn btn-primary">
+            Browse Events
+        </a>
+    }
+    else
+    {
+        <div class="table-responsive">
+
+            <table class="table table-striped table-hover align-middle">
+
+                <thead class="table-dark">
+                    <tr>
+                        <th>Event</th>
+                        <th>Activity</th>
+                        <th>Registration Date</th>
+                        <th>Bib Number</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var enrolment in Model)
+                    {
+                        <tr>
+                            <td>@enrolment.EventName</td>
+
+                            <td>@enrolment.ActivityName</td>
+
+                            <td>
+                                @enrolment.RegistrationDate.ToString("dd MMM yyyy")
+                            </td>
+
+                            <td>
+                                <strong>#@enrolment.BibNumber</strong>
+                            </td>
+
+                            <td>
+                                @if (enrolment.RegistrationStatus == "Confirmed")
+                                {
+                                    <span class="badge bg-success">
+                                        Confirmed
+                                    </span>
+                                }
+                                else if (enrolment.RegistrationStatus == "Pending")
+                                {
+                                    <span class="badge bg-warning text-dark">
+                                        Pending
+                                    </span>
+                                }
+                                else if (enrolment.RegistrationStatus == "Cancelled")
+                                {
+                                    <span class="badge bg-danger">
+                                        Cancelled
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        @enrolment.RegistrationStatus
+                                    </span>
+                                }
+                            </td>
+
+                            <td>
+                                <a asp-controller="Events"
+                                   asp-action="Details"
+                                   asp-route-id="@enrolment.EventId"
+                                   class="btn btn-outline-primary btn-sm">
+                                    View Event
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <a asp-controller="Events"
+           asp-action="Index"
+           class="btn btn-primary mt-3">
+            Browse More Events
+        </a>
+    }
+
+</div>

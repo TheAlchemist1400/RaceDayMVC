@@ -19,9 +19,11 @@
                 <div class="card-body">
                     <h5 class="card-title">Browse Events</h5>
                     <p>Discover upcoming RaceDay events.</p>
-                    <button class="btn btn-primary" disabled>
-                        Coming Soon
-                    </button>
+                    <a asp-controller="Events"
+                       asp-action="Index"
+                       class="btn btn-primary">
+                        Browse Events
+                    </a>
                 </div>
             </div>
         </div>
@@ -31,9 +33,11 @@
                 <div class="card-body">
                     <h5 class="card-title">My Enrolments</h5>
                     <p>View the events you have enrolled in.</p>
-                    <button class="btn btn-primary" disabled>
-                        Coming Soon
-                    </button>
+                    <a asp-controller="Enrolments"
+                       asp-action="MyEnrolments"
+                       class="btn btn-primary">
+                        My Enrolments
+                    </a>
                 </div>
             </div>
         </div>

@@ -72,9 +72,12 @@
                                 @eventItem.MaxParticipants
                             </p>
 
-                            <button class="btn btn-primary w-100" disabled>
-                                View Details - Coming Soon
-                            </button>
+                            <a asp-controller="Events"
+                               asp-action="Details"
+                               asp-route-id="@eventItem.EventId"
+                               class="btn btn-primary w-100">
+                                View Details
+                            </a>
 
                         </div>
 
