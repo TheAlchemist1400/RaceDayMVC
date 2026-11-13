@@ -1,0 +1,78 @@
+﻿@model RaceDay.Mvc.ViewModels.DeleteActivityViewModel
+
+@{
+    ViewData["Title"] = "Delete Activity";
+}
+
+<div class="container mt-4">
+
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-7">
+
+            <h1>Delete Activity</h1>
+
+            <div class="alert alert-warning mt-3">
+                <strong>Warning!</strong>
+                Are you sure you want to delete this activity?
+                This action cannot be undone.
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+
+                    <h4>@Model.ActivityName</h4>
+
+                    <hr />
+
+                    <p>
+                        <strong>Distance:</strong>
+                        @Model.DistanceKm km
+                    </p>
+
+                    <p>
+                        <strong>Entry Fee:</strong>
+                        R @Model.EntryFee.ToString("N2")
+                    </p>
+
+                    <p>
+                        <strong>Start Time:</strong>
+                        @Model.StartTime.ToString("HH:mm")
+                    </p>
+
+                    <p>
+                        <strong>Maximum Entrants:</strong>
+                        @Model.MaximumEntrants
+                    </p>
+
+                </div>
+            </div>
+
+            <form asp-controller="Activities"
+                  asp-action="Delete"
+                  asp-route-id="@Model.ActivityId"
+                  method="post">
+
+                @Html.AntiForgeryToken()
+
+                <div class="d-flex gap-2">
+
+                    <button type="submit"
+                            class="btn btn-danger">
+                        Yes, Delete Activity
+                    </button>
+
+                    <a asp-controller="Events"
+                       asp-action="Details"
+                       asp-route-id="@Model.EventId"
+                       class="btn btn-outline-secondary">
+                        Cancel
+                    </a>
+
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>

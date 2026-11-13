@@ -1,0 +1,126 @@
+﻿@model List<RaceDay.Mvc.ViewModels.MyResultViewModel>
+
+@{
+    ViewData["Title"] = "My Results";
+}
+
+<div class="container mt-4">
+
+    <h1>My Race Results</h1>
+
+    <p class="text-muted">
+        View your race performances and finishing positions.
+    </p>
+
+    <hr />
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["Error"]
+        </div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            <h5>No Results Available</h5>
+
+            <p>
+                You do not have any race results yet.
+                Your results will appear here once an
+                Organizer records them.
+            </p>
+
+            <a asp-controller="Events"
+               asp-action="Index"
+               class="btn btn-primary">
+                Browse Events
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+
+            <table class="table table-striped table-hover align-middle">
+
+                <thead class="table-dark">
+                    <tr>
+                        <th>Event</th>
+                        <th>Event Date</th>
+                        <th>Activity</th>
+                        <th>Finish Time</th>
+                        <th>Position</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    @foreach (var result in Model)
+                    {
+                        <tr>
+                            <td>
+                                <strong>@result.EventName</strong>
+                            </td>
+
+                            <td>
+                                @result.EventDate.ToString("dd MMM yyyy")
+                            </td>
+
+                            <td>
+                                @result.ActivityName
+                            </td>
+
+                            <td>
+                                @if (result.FinishTime.HasValue)
+                                {
+                                    @result.FinishTime.Value.ToString("HH:mm:ss")
+                                }
+                                else
+                                {
+                                    <span class="text-muted">
+                                        Not recorded
+                                    </span>
+                                }
+                            </td>
+
+                            <td>
+                                @if (result.Position.HasValue)
+                                {
+                                    <strong>
+                                        #@result.Position.Value
+                                    </strong>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">
+                                        Not recorded
+                                    </span>
+                                }
+                            </td>
+
+                            <td>
+                                @if (result.ResultStatus == "Finished")
+                                {
+                                    <span class="badge bg-success">
+                                        Finished
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        @result.ResultStatus
+                                    </span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+
+            </table>
+
+        </div>
+    }
+
+</div>

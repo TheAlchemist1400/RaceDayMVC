@@ -152,7 +152,7 @@
                                     </form>
                                 }
                             }
-
+                            
                             @if (role == "Organizer")
                             {
                                 <a asp-controller="Activities"
@@ -161,7 +161,15 @@
                                    class="btn btn-outline-primary w-100 mt-2">
                                     Edit Activity
                                 </a>
+
+                                <a asp-controller="Activities"
+                                   asp-action="Delete"
+                                   asp-route-id="@activity.ActivityId"
+                                   class="btn btn-outline-danger w-100 mt-2">
+                                    Delete Activity
+                                </a>
                             }
+
                         </div>
                     </div>
 

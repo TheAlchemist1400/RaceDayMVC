@@ -377,5 +377,193 @@ namespace RaceDay.Mvc.Controllers
                 new { id = model.EventId }
             );
         }
+
+
+        // GET: /Activities/Delete/3
+        // Displays a confirmation page before deleting an activity.
+        [HttpGet]
+        public async Task<IActionResult> Delete(int id)
+        {
+            // STEP 1: Check login and role.
+            int? userId = HttpContext.Session.GetInt32("UserId");
+
+            if (userId == null)
+                return RedirectToAction("Login", "Auth");
+
+            if (HttpContext.Session.GetString("Role") != "Organizer")
+                return StatusCode(403);
+
+            if (id <= 0)
+                return BadRequest("Invalid activity ID.");
+
+            // STEP 2: Retrieve events belonging to this Organizer.
+            using var eventsResponse = await _apiClient.SendAsync(
+                HttpMethod.Get,
+                "api/events/mine"
+            );
+
+            if (!eventsResponse.IsSuccessStatusCode)
+                return StatusCode((int)eventsResponse.StatusCode);
+
+            var myEvents =
+                await _apiClient.ReadAsync<List<EventViewModel>>(
+                    eventsResponse
+                ) ?? new List<EventViewModel>();
+
+            // STEP 3: Find the selected activity among owned events.
+            foreach (var eventItem in myEvents)
+            {
+                using var activitiesResponse = await _apiClient.SendAsync(
+                    HttpMethod.Get,
+                    $"api/events/{eventItem.EventId}/categories"
+                );
+
+                if (!activitiesResponse.IsSuccessStatusCode)
+                    return StatusCode((int)activitiesResponse.StatusCode);
+
+                var activities =
+                    await _apiClient.ReadAsync<List<ActivityViewModel>>(
+                        activitiesResponse
+                    ) ?? new List<ActivityViewModel>();
+
+                var activity = activities.FirstOrDefault(
+                    a => a.ActivityId == id
+                );
+
+                if (activity == null)
+                    continue;
+
+                // STEP 4: Populate the confirmation page.
+                var model = new DeleteActivityViewModel
+                {
+                    ActivityId = activity.ActivityId,
+                    EventId = eventItem.EventId,
+                    ActivityName = activity.ActivityName,
+                    DistanceKm = activity.DistanceKm,
+                    EntryFee = activity.EntryFee,
+                    StartTime = activity.StartTime,
+                    MaximumEntrants = activity.MaximumEntrants
+                };
+
+                return View(model);
+            }
+
+            return NotFound("Activity not found.");
+        }
+
+
+        // POST: /Activities/Delete/3
+        // Confirms deletion and calls the API's DELETE endpoint.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [ActionName("Delete")]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            // STEP 1: Check login and role.
+            int? userId = HttpContext.Session.GetInt32("UserId");
+
+            if (userId == null)
+                return RedirectToAction("Login", "Auth");
+
+            if (HttpContext.Session.GetString("Role") != "Organizer")
+                return StatusCode(403);
+
+            if (id <= 0)
+                return BadRequest("Invalid activity ID.");
+
+            // STEP 2: Find the activity's actual event before deleting.
+            // We only search events belonging to this Organizer.
+            using var eventsResponse = await _apiClient.SendAsync(
+                HttpMethod.Get,
+                "api/events/mine"
+            );
+
+            if (!eventsResponse.IsSuccessStatusCode)
+                return StatusCode((int)eventsResponse.StatusCode);
+
+            var myEvents =
+                await _apiClient.ReadAsync<List<EventViewModel>>(
+                    eventsResponse
+                ) ?? new List<EventViewModel>();
+
+            int? eventId = null;
+
+            foreach (var eventItem in myEvents)
+            {
+                using var activitiesResponse = await _apiClient.SendAsync(
+                    HttpMethod.Get,
+                    $"api/events/{eventItem.EventId}/categories"
+                );
+
+                if (!activitiesResponse.IsSuccessStatusCode)
+                    return StatusCode((int)activitiesResponse.StatusCode);
+
+                var activities =
+                    await _apiClient.ReadAsync<List<ActivityViewModel>>(
+                        activitiesResponse
+                    ) ?? new List<ActivityViewModel>();
+
+                if (activities.Any(a => a.ActivityId == id))
+                {
+                    eventId = eventItem.EventId;
+                    break;
+                }
+            }
+
+            if (eventId == null)
+                return NotFound("Activity not found.");
+
+            // STEP 3: Send DELETE request to API.
+            using var response = await _apiClient.SendAsync(
+                HttpMethod.Delete,
+                $"api/categories/{id}"
+            );
+
+            // STEP 4: Handle API errors.
+            if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+                return RedirectToAction("Login", "Auth");
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                return StatusCode(403);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+                return NotFound("Activity not found.");
+
+            if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
+            {
+                TempData["Error"] =
+                    "This activity cannot be deleted because it has existing registrations.";
+
+                return RedirectToAction(
+                    "Details",
+                    "Events",
+                    new { id = eventId.Value }
+                );
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                TempData["Error"] =
+                    "Unable to delete activity. It may have related registrations.";
+
+                return RedirectToAction(
+                    "Details",
+                    "Events",
+                    new { id = eventId.Value }
+                );
+            }
+
+            // STEP 5: Deletion successful.
+            TempData["Success"] =
+                "Activity deleted successfully.";
+
+            return RedirectToAction(
+                "Details",
+                "Events",
+                new { id = eventId.Value }
+            );
+        }
+
+
     }
 }
