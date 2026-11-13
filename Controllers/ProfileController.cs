@@ -123,5 +123,91 @@ namespace RaceDay.Mvc.Controllers
 
             return RedirectToAction(nameof(Index));
         }
+
+
+        // POST: /Profile/UploadImage
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [RequestSizeLimit(5 * 1024 * 1024 + 65536)]
+        public async Task<IActionResult> UploadImage(IFormFile file)
+        {
+            // STEP 1: Verify MVC session.
+            int? userId = HttpContext.Session.GetInt32("UserId");
+
+            if (userId == null)
+                return RedirectToAction("Login", "Auth");
+
+            // STEP 2: Only Participants can upload profile pictures.
+            if (HttpContext.Session.GetString("Role") != "Participant")
+                return StatusCode(403);
+
+            // STEP 3: Check that a file was selected.
+            if (file == null || file.Length == 0)
+            {
+                TempData["Error"] = "Please select an image.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // STEP 4: Validate file size.
+            const long maxFileSize = 5 * 1024 * 1024;
+
+            if (file.Length > maxFileSize)
+            {
+                TempData["Error"] = "Image must not exceed 5 MB.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            try
+            {
+                // STEP 5: Send the image to RaceDay API.
+                using var response = await _apiClient.UploadImageAsync(
+                    "api/profile/upload-image",
+                    file
+                );
+
+                // STEP 6: Handle expired API sessions.
+                if (response.StatusCode ==
+                    System.Net.HttpStatusCode.Unauthorized)
+                {
+                    return RedirectToAction("Login", "Auth");
+                }
+
+                // STEP 7: Handle forbidden access.
+                if (response.StatusCode ==
+                    System.Net.HttpStatusCode.Forbidden)
+                {
+                    return StatusCode(403);
+                }
+
+                // STEP 8: Handle API validation errors.
+                if (!response.IsSuccessStatusCode)
+                {
+                    TempData["Error"] =
+                        "Unable to upload profile picture. " +
+                        "Please check the image format and try again.";
+
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // STEP 9: Upload successful.
+                TempData["Success"] =
+                    "Profile picture uploaded successfully!";
+
+                return RedirectToAction(nameof(Index));
+            }
+            catch (ArgumentException ex)
+            {
+                TempData["Error"] = ex.Message;
+                return RedirectToAction(nameof(Index));
+            }
+            catch (HttpRequestException)
+            {
+                TempData["Error"] =
+                    "Could not connect to the RaceDay API.";
+
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
     }
 }

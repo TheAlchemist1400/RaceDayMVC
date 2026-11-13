@@ -61,6 +61,60 @@ namespace RaceDay.Mvc.Services
             return await client.SendAsync(request);
         }
 
+
+        // Sends an image from MVC to the API using multipart/form-data.
+        // Reuses the existing API session cookie.
+        public async Task<HttpResponseMessage> UploadImageAsync(
+            string url,
+            IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                throw new ArgumentException(
+                    "Please select an image to upload.");
+            }
+
+            const long maxFileSize = 5 * 1024 * 1024;
+
+            if (file.Length > maxFileSize)
+            {
+                throw new ArgumentException(
+                    "Image must not exceed 5 MB.");
+            }
+
+            // STEP 1: Create the configured HTTP client.
+            var client = CreateClient();
+
+            // STEP 2: Create an authenticated POST request.
+            using var request = CreateRequest(
+                HttpMethod.Post,
+                url
+            );
+
+            // STEP 3: Create multipart/form-data content.
+            using var form = new MultipartFormDataContent();
+
+            // STEP 4: Open the uploaded file stream.
+            using var stream = file.OpenReadStream();
+
+            using var fileContent = new StreamContent(stream);
+
+            // STEP 5: Add the file to the form.
+            // The field name "file" must match the API parameter.
+            form.Add(
+                fileContent,
+                "file",
+                file.FileName
+            );
+
+            // STEP 6: Attach multipart content to the request.
+            request.Content = form;
+
+            // STEP 7: Forward the request to the API.
+            return await client.SendAsync(request);
+        }
+
+
         public async Task<T?> ReadAsync<T>(HttpResponseMessage response)
         {
             if (!response.IsSuccessStatusCode)
