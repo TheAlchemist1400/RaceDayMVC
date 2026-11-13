@@ -298,6 +298,7 @@ namespace RaceDay.Mvc.Controllers
                 EventDate = eventItem.EventDate,
                 MaxParticipants = eventItem.MaxParticipants,
                 LocationId = eventItem.LocationId,
+                BannerImageUrl = eventItem.BannerImageUrl,
                 Locations = locations
             };
 
@@ -626,7 +627,7 @@ namespace RaceDay.Mvc.Controllers
             if (file == null || file.Length == 0)
             {
                 TempData["Error"] = "Please select a banner image.";
-                return RedirectToAction(nameof(MyEvents));
+                return RedirectToAction(nameof(Edit), new { id });
             }
 
             const long maxFileSize = 5 * 1024 * 1024;
@@ -634,7 +635,7 @@ namespace RaceDay.Mvc.Controllers
             if (file.Length > maxFileSize)
             {
                 TempData["Error"] = "Banner must not exceed 5 MB.";
-                return RedirectToAction(nameof(MyEvents));
+                return RedirectToAction(nameof(Edit), new { id });
             }
 
             try

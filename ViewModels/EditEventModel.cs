@@ -8,6 +8,8 @@ namespace RaceDay.Mvc.ViewModels
     {
         public int EventId { get; set; }
 
+        public string? BannerImageUrl { get; set; }
+
         [Required(ErrorMessage = "Please enter an event name.")]
         [StringLength(50)]
         public string EventsName { get; set; } = string.Empty;
