@@ -136,12 +136,12 @@
                                     Edit
                                 </a>
 
-                                <a asp-controller="Activities"
+                                @* <a asp-controller="Activities"
                                    asp-action="Create"
                                    asp-route-eventId="@eventItem.EventId"
                                    class="btn btn-outline-success btn-sm">
                                     Add Activity
-                                </a>
+                                </a> *@
 
                                 <a asp-controller="Events"
                                    asp-action="Delete"
@@ -151,19 +151,19 @@
                                 </a>
 
                                 
-                                <a asp-controller="Enrolments"
+                                @* <a asp-controller="Enrolments"
                                    asp-action="EventRegistrations"
                                    asp-route-id="@eventItem.EventId"
                                    class="btn btn-outline-info btn-sm">
                                     View Registrations
-                                </a>
+                                </a> *@
 
                                 
                                 <hr />
 
-                                <h6 class="mt-3">Event Banner</h6>
+                                @* <h6 class="mt-3">Event Banner</h6> *@
 
-                                <form asp-controller="Events"
+                                @* <form asp-controller="Events"
                                       asp-action="UploadBanner"
                                       asp-route-id="@eventItem.EventId"
                                       method="post"
@@ -187,11 +187,11 @@
                                             : "Replace Banner")
 
                                     </button>
-                                </form>
+                                </form> *@
 
-                                <small class="text-muted d-block mt-2">
+                                @* <small class="text-muted d-block mt-2">
                                     JPG, PNG or WebP. Maximum size: 5 MB.
-                                </small>
+                                </small> *@
 
 
                             </div>
