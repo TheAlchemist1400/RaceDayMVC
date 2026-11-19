@@ -525,3 +525,5 @@ Container configuration and validation will be documented once implemented and t
 | Swagger-based API interaction | Browser-based user interface |
 | Backend authentication | MVC login and role-aware navigation |
 | API event management | Organizer event management pages
+
+Youtube - https://youtu.be/HOm7rkG-TVo
